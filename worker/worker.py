@@ -2,10 +2,11 @@ MAX_READ = 10000
 
 
 class Worker:
-    def __init__(self, reader, writer):
+    def __init__(self, reader, writer, routes):
         self.reader = reader
         self.writer = writer
         self.state = "HEADER"
+        self.routes = routes
 
     async def run(self):
         buffer = b""
@@ -76,9 +77,17 @@ class Worker:
         header += "Accept_Ranges: bytes\r\n"
         header += f"Content-length: #{length}\r\n"
         header += "Vary: Accept-Encoding\r\n"
-        header += "Content-Type: text/plain\r\n\r\n"
+        header += "Content-Type: html\r\n\r\n"
 
         return header
 
     def make_body(self):
-        return f"{self.header}\r\n\r\n"
+        path = self.header["request"]["path"]
+        if path not in self.routes.keys():
+            "error"
+        return self.get_content(self.routes[path])
+
+    def get_content(self, path):
+        with open(path, "r") as f:
+            content = f.read()
+        return content

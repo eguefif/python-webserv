@@ -1,9 +1,11 @@
 import asyncio
 from worker.worker import Worker
 
+routes = {"/": "./html/index.html"}
+
 
 async def handle(reader, writer):
-    worker = Worker(reader, writer)
+    worker = Worker(reader, writer, routes)
     await worker.run()
 
     writer.close()
