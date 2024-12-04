@@ -68,17 +68,17 @@ class Worker:
 
     def make_response(self):
         response = ""
-        response += self.make_header()
-        response += self.make_body()
+        body = self.make_body()
+        response += self.make_header(len(body))
+        response += body
 
         return response
 
-    def make_header(self):
-        length = len(self.header) + 2
+    def make_header(self, length):
         header = "HTTP/1.1 200 OK\r\n"
         header += f"Date: {get_time_now()}\r\n"
         header += "Accept_Ranges: bytes\r\n"
-        header += f"Content-Length: #{length}\r\n"
+        header += f"Content-Length: {length}\r\n"
         header += "Vary: Accept-Encoding\r\n"
         header += "Content-Type: html\r\n\r\n"
 
@@ -93,6 +93,7 @@ class Worker:
     def get_content(self, path):
         with open(path, "r") as f:
             content = f.read()
+        print(content)
         return content
 
 
