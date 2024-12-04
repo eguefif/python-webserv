@@ -1,9 +1,12 @@
 import datetime
 
+PAGE_404 = "./html/404.html"
+
 
 class ResponseBuilder:
     def __init__(self, routes):
         self.routes = routes
+        self.status = 200
 
     def make_response(self, header):
         response = ""
@@ -14,7 +17,7 @@ class ResponseBuilder:
         return response
 
     def make_header(self, length):
-        header = "HTTP/1.1 200 OK\r\n"
+        header = f"HTTP/1.1 {self.status} OK\r\n"
         header += f"Date: {get_time_now()}\r\n"
         header += "Accept_Ranges: bytes\r\n"
         header += f"Content-Length: {length}\r\n"
@@ -26,12 +29,18 @@ class ResponseBuilder:
     def make_body(self, request_header):
         path = request_header["request"]["path"]
         if path not in self.routes.keys():
-            "error"
+            return self.get_404()
         return self.get_content(self.routes[path])
 
     def get_content(self, path):
         with open(path, "r") as f:
             content = f.read()
+        return content
+
+    def get_404(self):
+        with open(PAGE_404, "r") as f:
+            content = f.read()
+        self.status = 404
         return content
 
 
