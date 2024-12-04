@@ -1,3 +1,6 @@
+import time
+import datetime
+
 MAX_READ = 10000
 
 
@@ -73,9 +76,9 @@ class Worker:
     def make_header(self):
         length = len(self.header) + 2
         header = "HTTP/1.1 200 OK\r\n"
-        header += "Date: Tue, 3 Dec 2024 21:16:3 EDT\r\n"
+        header += f"Date: {get_time_now()}\r\n"
         header += "Accept_Ranges: bytes\r\n"
-        header += f"Content-length: #{length}\r\n"
+        header += f"Content-Length: #{length}\r\n"
         header += "Vary: Accept-Encoding\r\n"
         header += "Content-Type: html\r\n\r\n"
 
@@ -91,3 +94,8 @@ class Worker:
         with open(path, "r") as f:
             content = f.read()
         return content
+
+
+def get_time_now():
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return now.strftime("%a, %d, %b %Y %H:%M:%S GMT")
