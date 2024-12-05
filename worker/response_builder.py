@@ -22,7 +22,7 @@ class ResponseBuilder:
         header += "Accept_Ranges: bytes\r\n"
         header += f"Content-Length: {length}\r\n"
         header += "Vary: Accept-Encoding\r\n"
-        header += f"Content-Type: {request.content_type()}\r\n\r\n"
+        header += f"Content-Type: {request.content_type}\r\n\r\n"
 
         return header
 
