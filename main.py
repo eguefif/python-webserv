@@ -1,10 +1,12 @@
 import asyncio
 from worker.worker import Worker
 from worker.response_builder import get_time_now
+from worker.exception import Error400Exception
 
 routes = {"/": "./html/index.html"}
 
 PAGE_500 = "./html/500.html"
+PAGE_400 = "./html/400.html"
 
 
 def get_header(length, error):
@@ -23,8 +25,9 @@ def get_body(path):
     return content
 
 
-def get_error_500():
-    body = get_body(PAGE_500)
+def get_error_message(error):
+    path = PAGE_500 if error == 500 else PAGE_400
+    body = get_body(path)
     response = get_header(len(body), 500)
     response += body
     return response
@@ -34,8 +37,12 @@ async def handle(reader, writer):
     worker = Worker(reader, writer, routes)
     try:
         await worker.run()
+    except Error400Exception:
+        response = get_error_message(400)
+        writer.write(response.encode())
+        await writer.drain()
     except Exception:
-        response = get_error_500()
+        response = get_error_message(500)
         writer.write(response.encode())
         await writer.drain()
     finally:
