@@ -8,7 +8,9 @@ routes = {"/": "./html/index.html", "/image.jpg": "./html/image.jpg"}
 
 
 async def handle(reader, writer):
+    print()
     print("New request: ", writer.get_extra_info("socket"))
+    print()
     worker = Worker(reader, writer, routes)
     try:
         await worker.run()
