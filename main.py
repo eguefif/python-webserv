@@ -1,15 +1,46 @@
 import asyncio
 from worker.worker import Worker
+from worker.response_builder import get_time_now
 
 routes = {"/": "./html/index.html"}
+
+PAGE_500 = "./html/500.html"
+
+
+def get_header(length, error):
+    header = f"HTTP/1.1 {error} OK\r\n"
+    header += f"Date: {get_time_now()}\r\n"
+    header += "Accept_Ranges: bytes\r\n"
+    header += f"Content-Length: {length}\r\n"
+    header += "Vary: Accept-Encoding\r\n"
+    header += "Content-Type: html\r\n\r\n"
+    return header
+
+
+def get_body(path):
+    with open(path, "r") as f:
+        content = f.read()
+    return content
+
+
+def get_error_500():
+    body = get_body(PAGE_500)
+    response = get_header(len(body), 500)
+    response += body
+    return response
 
 
 async def handle(reader, writer):
     worker = Worker(reader, writer, routes)
-    await worker.run()
-
-    writer.close()
-    await writer.wait_closed()
+    try:
+        await worker.run()
+    except Exception:
+        response = get_error_500()
+        writer.write(response.encode())
+        await writer.drain()
+    finally:
+        writer.close()
+        await writer.wait_closed()
 
 
 async def main():
