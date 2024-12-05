@@ -1,10 +1,14 @@
 import traceback
 import asyncio
 from worker.worker import Worker
-from worker.exception import Error400Exception
+from error.exception import Error400Exception, ErrorUnsupportedMediaTypeException
 from response import error
 
-routes = {"/": "./html/index.html", "/image.jpg": "./html/image.jpg"}
+routes = {
+    "/": "./html/index.html",
+    "/image.jpg": "./html/image.jpg",
+    "/upload.html": "./html/upload.html",
+}
 
 
 async def handle(reader, writer):
@@ -16,6 +20,10 @@ async def handle(reader, writer):
         await worker.run()
     except Error400Exception:
         response = error.get_error_message(400)
+        writer.write(response.encode())
+        await writer.drain()
+    except ErrorUnsupportedMediaTypeException:
+        response = error.get_error_message(415)
         writer.write(response.encode())
         await writer.drain()
     except Exception as e:

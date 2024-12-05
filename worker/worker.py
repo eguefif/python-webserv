@@ -1,4 +1,5 @@
 from worker.request import Request
+from worker.body_handler import BodyHandler
 from worker.parser import Parser
 from worker.response_builder import ResponseBuilder
 
@@ -46,7 +47,9 @@ class Worker:
             if not self.is_body():
                 self.state = "RESPONDING"
             else:
-                self.request.body = buffer.decode().strip()
+                self.request.body = buffer
+                handler = BodyHandler(self.request)
+                handler.handle()
                 self.state = "RESPONDING"
                 buffer = b""
 
@@ -60,7 +63,11 @@ class Worker:
         return buffer
 
     def is_body(self):
-        if self.request.header["request"]["method"].lower() in ["post", "update"]:
+        if self.request.header["request"]["method"].lower() in [
+            "post",
+            "update",
+            "put",
+        ]:
             return True
         else:
             return False

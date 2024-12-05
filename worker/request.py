@@ -1,3 +1,5 @@
+from error.exception import Error400Exception
+
 EXTENSION_MESSAGE = {
     "html": "text/html; charset=utf-8",
     "png": "image/png",
@@ -18,3 +20,10 @@ class Request:
             return EXTENSION_MESSAGE["html"]
         else:
             return EXTENSION_MESSAGE[extension]
+
+    @property
+    def body_type(self):
+        if "content-type" not in self.header.keys():
+            raise Error400Exception("Missing content-type")
+        else:
+            return self.header["content-type"]
