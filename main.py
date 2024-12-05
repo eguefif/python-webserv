@@ -1,9 +1,10 @@
+import traceback
 import asyncio
 from worker.worker import Worker
 from worker.response_builder import get_time_now
 from worker.exception import Error400Exception
 
-routes = {"/": "./html/index.html"}
+routes = {"/": "./html/index.html", "/image.jpg": "./html/image.jpg"}
 
 PAGE_500 = "./html/500.html"
 PAGE_400 = "./html/400.html"
@@ -41,7 +42,9 @@ async def handle(reader, writer):
         response = get_error_message(400)
         writer.write(response.encode())
         await writer.drain()
-    except Exception:
+    except Exception as e:
+        print(f"Error:{e}")
+        print(traceback.format_exc())
         response = get_error_message(500)
         writer.write(response.encode())
         await writer.drain()

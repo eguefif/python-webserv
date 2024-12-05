@@ -35,8 +35,9 @@ class Worker:
                 buffer = b""
 
         if self.state == "RESPONDING":
+            print(f"Receive request: {self.header}")
             response = self.response_builder.make_response(self.header)
-            self.writer.write(response.encode())
+            self.writer.write(response)
             await self.writer.drain()
             self.state = "ENDING"
 
