@@ -1,13 +1,4 @@
-class Message:
-    def __init__(self):
-        self.header = {}
-        self.body = ""
-
-
 class Parser:
-    def __init__(self):
-        self.message = Message()
-
     def parse_header(self, data):
         header = data.decode()
         splits = header.strip().split("\r\n")
