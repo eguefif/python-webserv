@@ -1,11 +1,16 @@
 import datetime
+from error.exception import Error400Exception
 
-PAGE_404 = "./html/404.html"
+
+routes = {
+    "/": "./html/index.html",
+    "/image.jpg": "./html/image.jpg",
+    "/upload.html": "./html/upload.html",
+}
 
 
 class ResponseBuilder:
-    def __init__(self, routes):
-        self.routes = routes
+    def __init__(self):
         self.status = 200
 
     def make_response(self, request):
@@ -28,17 +33,14 @@ class ResponseBuilder:
 
     def make_body(self, request_header):
         path = request_header["request"]["path"]
-        if path not in self.routes.keys():
-            return self.get_404()
-        return self.get_content(self.routes[path])
+        if path not in routes.keys():
+            raise Error400Exception("Path not found")
+        return self.get_content(routes[path])
 
     def get_content(self, path):
         with open(path, "br") as f:
             content = f.read()
         return content
-
-    def get_404(self):
-        return self.get_content(PAGE_404)
 
 
 def get_time_now():

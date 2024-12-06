@@ -4,18 +4,12 @@ from worker.worker import Worker
 from error.exception import Error400Exception, ErrorUnsupportedMediaTypeException
 from response import error
 
-routes = {
-    "/": "./html/index.html",
-    "/image.jpg": "./html/image.jpg",
-    "/upload.html": "./html/upload.html",
-}
-
 
 async def handle(reader, writer):
     print()
     print("New request: ", writer.get_extra_info("socket"))
     print()
-    worker = Worker(reader, writer, routes)
+    worker = Worker(reader, writer)
     try:
         await worker.run()
     except Exception as e:

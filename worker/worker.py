@@ -1,76 +1,17 @@
 from request.request import Request
-from request.body_handler import BodyHandler
-from request.parser import Parser
-from response.response_builder import ResponseBuilder
-
-MAX_READ = 10000
-MAX_BODY = 1000000
-
-# TODO: Implements keep alive here. Check for timeout and change ENDING for WAITING.
-# We turn into ENDING when timeout out receive a close connection.
+from worker.header_state import HeaderState
 
 
 class Worker:
-    def __init__(self, reader, writer, routes):
+    def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
-        self.state = "HEADER"
-        self.parser = Parser()
-        self.response_builder = ResponseBuilder(routes)
+        self.current_state = None
         self.request = Request()
 
     async def run(self):
-        buffer = b""
-        while self.state != "ENDING" and len(buffer) < MAX_READ:
-            if self.state == "BODY" and self.is_body():
-                buffer += await self.reader.read(self.body_size())
-            elif self.state == "HEADER":
-                buffer += await self.reader.read(1)
-            buffer = await self.handle_state(buffer)
-        print("Request handling ending")
+        self.current_state = HeaderState(self.reader, self.writer)
 
-    def body_size(self):
-        retval = 0
-        if "content-length" in self.request.header.keys():
-            retval = int(self.request.header["content-length"])
-        else:
-            retval = MAX_BODY
-        return MAX_BODY if retval > MAX_BODY else retval
-
-    async def handle_state(self, buffer):
-        if self.state == "HEADER":
-            if len(buffer) > 3 and buffer[-4:] == b"\r\n\r\n":
-                self.request.header = self.parser.parse_header(buffer)
-                self.state = "BODY"
-                print(f"Receive request: {self.request.header}")
-                print()
-                buffer = b""
-
-        elif self.state == "BODY":
-            if not self.is_body():
-                self.state = "RESPONDING"
-            else:
-                self.request.body = buffer
-                handler = BodyHandler(self.request)
-                handler.handle()
-                self.state = "RESPONDING"
-                buffer = b""
-
-        elif self.state == "RESPONDING":
-            response = self.response_builder.make_response(self.request)
-            self.writer.write(response)
-            response = self.response_builder.make_response(self.request)
-            await self.writer.drain()
-            self.state = "ENDING"
-
-        return buffer
-
-    def is_body(self):
-        if self.request.header["request"]["method"].lower() in [
-            "post",
-            "update",
-            "put",
-        ]:
-            return True
-        else:
-            return False
+        while self.current_state.state() != "ENDING":
+            print("State: ", self.current_state.state())
+            self.current_state = await self.current_state.run(self.request)

@@ -2,7 +2,7 @@ from error.exception import Error400Exception
 from error.exception import ErrorUnsupportedMediaTypeException
 import re
 
-FILE_PATH = "./files/"
+FILE_PATH = "./uploaded_files/"
 
 
 class BodyHandler:
