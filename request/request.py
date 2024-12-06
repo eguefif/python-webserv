@@ -27,3 +27,7 @@ class Request:
             raise Error400Exception("Missing content-type")
         else:
             return self.header["content-type"]
+
+    def __str__(self):
+        retval = f"request-id: {self.header}"
+        return retval

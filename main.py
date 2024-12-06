@@ -1,14 +1,11 @@
 import traceback
 import asyncio
 from worker.worker import Worker
-from error.exception import Error400Exception, ErrorUnsupportedMediaTypeException
 from response import error
+import logging
 
 
 async def handle(reader, writer):
-    print()
-    print("New request: ", writer.get_extra_info("socket"))
-    print()
     worker = Worker(reader, writer)
     try:
         await worker.run()
@@ -24,6 +21,7 @@ async def handle(reader, writer):
 
 
 async def main():
+    logging.basicConfig(level=logging.DEBUG, encoding="utf-8")
     server = await asyncio.start_server(handle, "127.0.0.1", 8888)
     addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
     print(f"Serving on #{addrs}")
