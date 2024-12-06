@@ -1,7 +1,7 @@
-from worker.request import Request
-from worker.body_handler import BodyHandler
-from worker.parser import Parser
-from worker.response_builder import ResponseBuilder
+from request.request import Request
+from request.body_handler import BodyHandler
+from request.parser import Parser
+from response.response_builder import ResponseBuilder
 
 MAX_READ = 10000
 MAX_BODY = 1000000
