@@ -1,7 +1,10 @@
+from error.exception import ErrorUnsupportedMediaTypeException
+from error.exception import Error400Exception
 from worker.response_builder import get_time_now
 
 PAGE_500 = "./html/500.html"
 PAGE_400 = "./html/400.html"
+PAGE_415 = "./html/415.html"
 
 
 def get_header(length, error):
@@ -21,7 +24,13 @@ def get_body(path):
 
 
 def get_error_message(error):
-    path = PAGE_500 if error == 500 else PAGE_400
+    path = PAGE_500
+    if hasattr(error, "status"):
+        match error.status:
+            case 400:
+                path = PAGE_400
+            case 415:
+                path = PAGE_415
     body = get_body(path)
     response = get_header(len(body), 500)
     response += body

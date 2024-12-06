@@ -18,18 +18,10 @@ async def handle(reader, writer):
     worker = Worker(reader, writer, routes)
     try:
         await worker.run()
-    except Error400Exception:
-        response = error.get_error_message(400)
-        writer.write(response.encode())
-        await writer.drain()
-    except ErrorUnsupportedMediaTypeException:
-        response = error.get_error_message(415)
-        writer.write(response.encode())
-        await writer.drain()
     except Exception as e:
         print(f"Error:{e}")
         print(traceback.format_exc())
-        response = error.get_error_message(500)
+        response = error.get_error_message(e)
         writer.write(response.encode())
         await writer.drain()
     finally:

@@ -6,6 +6,9 @@ from worker.response_builder import ResponseBuilder
 MAX_READ = 10000
 MAX_BODY = 1000000
 
+# TODO: Implements keep alive here. Check for timeout and change ENDING for WAITING.
+# We turn into ENDING when timeout out receive a close connection.
+
 
 class Worker:
     def __init__(self, reader, writer, routes):
