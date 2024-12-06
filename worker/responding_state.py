@@ -1,5 +1,4 @@
 from response.response_builder import ResponseBuilder
-from worker.ending_state import EndingState
 
 
 class RespondingState:
@@ -13,7 +12,9 @@ class RespondingState:
         return "RESPONDING"
 
     async def run(self, request):
+        from worker.header_state import HeaderState
+
         response = self.response_builder.make_response(request)
         self.writer.write(response)
         await self.writer.drain()
-        return EndingState(self.reader, self.writer)
+        return HeaderState(self.reader, self.writer)
