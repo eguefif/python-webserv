@@ -6,6 +6,7 @@ routes = {
     "/": "./html/index.html",
     "/image.jpg": "./html/image.jpg",
     "/upload.html": "./html/upload.html",
+    "/favicon.ico": "./html/favicon.ico",
 }
 
 
@@ -41,6 +42,17 @@ class ResponseBuilder:
         with open(path, "br") as f:
             content = f.read()
         return content
+
+
+def closing_message():
+    header = "HTTP/1.1 200 OK\r\n"
+    header += "Date: {get_time_now()}\r\n"
+    header += "Accept_Ranges: bytes\r\n"
+    header += "Content-Length: 0\r\n"
+    header += "Vary: Accept-Encoding\r\n"
+    header += "Connection: close\r\n"
+
+    return header
 
 
 def get_time_now():

@@ -1,6 +1,7 @@
 import logging
 from request.request import Request
 from worker.header_state import HeaderState
+from response import response_builder
 
 
 class Worker:
@@ -20,3 +21,9 @@ class Worker:
                 "%s(%s):\n%s\n", self.peername, self.current_state.state(), self.request
             )
             self.current_state = await self.current_state.run(self.request)
+
+    async def teardown(self):
+        logging.info("Closing connexion with %s", self.peername)
+        self.writer.write(response_builder.closing_message().encode())
+        await self.writer.drain()
+        logging.info("Connexion closed with %s", self.peername)
