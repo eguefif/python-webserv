@@ -5,28 +5,52 @@ import re
 FILE_PATH = "./uploaded_files/"
 
 
+class MultipartChunk:
+    def __init__(self):
+        self.content = b""
+        self.header = {}
+
+    def set_header(self, header_chunk):
+        splits = [split.decode() for split in header_chunk.split(b"\r\n")]
+
+        for split in splits:
+            parts = [split.strip().lower() for split in split.split(":")]
+            self.header[parts[0]] = parts[1]
+
+    def process(self):
+        if "content-type" in self.header:
+            match self.header["content-type"]:
+                case "image/png":
+                    filename = self.get_filename()
+                    with open(FILE_PATH + filename, "bw") as f:
+                        f.write(self.content)
+
+                case _:
+                    print("BODY: ", self.content.decode())
+        else:
+            print("BODY: ", self.content.decode())
+
+    def get_filename(self):
+        splits = [
+            split.strip() for split in self.header["content-disposition"].split(";")
+        ]
+        for part in splits:
+            chunks = part.split("=")
+            if chunks[0] == "filename":
+                return chunks[1].replace('"', "")
+        raise Error400Exception("Bad filename")
+
+
 class BodyHandler:
     def __init__(self, request):
         self.request = request
-        self.content_type, self.content_disposition, self.bound_check = (
-            self.parse_body_header()
-        )
-        self.body_content = self.get_body_content()
-        self.size = int(self.request.header["content-length"])
+        self.bound_check = self.get_bound_check()
 
-    def parse_body_header(self):
-        end_body_header = self.request.body.find(b"\r\n\r\n")
-        if end_body_header == -1:
-            raise Error400Exception("Wrong body")
-        body_header = self.request.body[:end_body_header].decode()
-
-        chunks = body_header.split("\r\n")
-
-        return (
-            get_type(chunks[2]),
-            get_disposition(chunks[1]),
-            chunks[0],
-        )
+    def get_bound_check(self):
+        try:
+            return self.request.header["content-type"].split("boundary=")[1]
+        except Exception:
+            raise Error400Exception("Bad content-type")
 
     def get_body_content(self):
         start_index = self.request.body.find(b"\r\n\r\n") + 4
@@ -35,9 +59,21 @@ class BodyHandler:
             raise Error400Exception("Wrong bound check")
         return self.request.body[start_index:end_index]
 
-    def handle(self):
-        with open(FILE_PATH + self.content_disposition["filename"], "bw") as f:
-            f.write(self.body_content)
+    def parse(self):
+        sep = b"\r\n\r\n"
+        splits = [
+            split.strip()
+            for split in self.request.body.split(self.bound_check.encode())
+        ]
+        for split in splits:
+            if split == b"--" or split == b"--\r\n\r\n":
+                continue
+            body_chunks = split.split(sep)
+            chunk = MultipartChunk()
+            chunk.set_header(body_chunks[0])
+            chunk.content = body_chunks[1]
+            chunk.process()
+            self.request.body_chunks.append(chunk)
 
 
 def get_disposition(disposition):

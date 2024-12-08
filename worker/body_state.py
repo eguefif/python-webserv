@@ -14,9 +14,9 @@ class BodyState:
         return "BODY"
 
     async def run(self, request):
-        if is_body(request):
-            buffer = await self.reader.read(self.body_size(request))
-            self.handle(request, buffer)
+        if is_content_length(request):
+            request.body = await self.reader.read(self.body_size(request))
+            self.handle(request)
         return RespondingState(self.reader, self.writer)
 
     def body_size(self, request):
@@ -27,18 +27,14 @@ class BodyState:
             retval = MAX_BODY
         return MAX_BODY if retval > MAX_BODY else retval
 
-    def handle(self, request, buffer):
-        request.body = buffer
+    def handle(self, request):
         handler = BodyHandler(request)
-        handler.handle()
+        handler.parse()
 
 
-def is_body(request):
-    if request.header["request"]["method"].lower() in [
-        "post",
-        "update",
-        "put",
-    ]:
-        return True
-    else:
-        return False
+def is_content_length(request):
+    return "content-length" in request.header.keys()
+
+
+def is_transfer_coding(request):
+    return "transfer-encoding" in request.header.keys()

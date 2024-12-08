@@ -12,6 +12,7 @@ class Request:
     def __init__(self):
         self.header = {}
         self.body = ""
+        self.body_chunks = []
 
     @property
     def content_type(self):
