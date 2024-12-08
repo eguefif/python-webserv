@@ -1,3 +1,5 @@
+import importlib
+import sys
 import signal
 import traceback
 import asyncio
@@ -9,8 +11,19 @@ import logging
 workers = []
 
 
+def get_app_from_argv():
+    if len(sys.argv) == 0:
+        print("Usage: python3 main.py module:function")
+        return
+    mod, _, fct = sys.argv[1]
+
+    module = importlib.import_module(mod)
+    return getattr(module, fct)
+
+
 async def handle(reader, writer):
-    worker = Worker(reader, writer)
+    app = get_app_from_argv
+    worker = Worker(reader, writer, app)
     workers.append(worker)
     try:
         await asyncio.wait_for(worker.run(), timeout=5)

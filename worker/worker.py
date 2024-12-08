@@ -5,12 +5,13 @@ from response import response_builder
 
 
 class Worker:
-    def __init__(self, reader, writer):
+    def __init__(self, reader, writer, app):
         self.reader = reader
         self.writer = writer
         self.current_state = None
         self.request = Request()
         self.peername = self.writer.get_extra_info("socket").getpeername()
+        self.app = app
 
     async def run(self):
         logging.info("New client: %s\n", self.peername)

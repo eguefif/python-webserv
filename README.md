@@ -1,8 +1,9 @@
-# Python WebServer
+# Python asgi WebServer
 
 ## Description
 
 This is a playground project to learn about HTTP and the mechanics around it.
+I also learn about the asgi spefications
 
 
 ## Getting Started
@@ -22,7 +23,8 @@ This is a playground project to learn about HTTP and the mechanics around it.
 * How to run the program
 * Step-by-step bullets
 ```
-code blocks for commands
+python3 main.py APP
+# APP => main:app 
 ```
 
 ## Help
@@ -35,13 +37,3 @@ command to run if program contains helper info
 ## Authors
 
 Emmanuel Guefif
-
-## Version History
-
-* 0.1
-    * Initial Release
-    * Basic routing handling
-    * Basic handling of the following method: GET, POST
-    * Handle response with basic html
-    * Handle response with file uploaded toward the client
-    * Handle form and files uploading from the client
