@@ -4,13 +4,19 @@ PAGE_500 = "./html/500.html"
 PAGE_400 = "./html/400.html"
 PAGE_415 = "./html/415.html"
 
+ERROR = {
+    400: ("400", "BAD REQUEST "),
+    415: ("415", "UNSUPPORTED MEDIA TYPE "),
+    500: ("500", "INTERNAL ERROR "),
+}
+
 
 def get_header(length, error):
-    header = f"HTTP/1.1 {error} OK\r\n"
+    code, message = ERROR[error]
+    header = f"HTTP/1.1 {code} {message}\r\n"
     header += f"Date: {get_time_now()}\r\n"
     header += "Accept_Ranges: bytes\r\n"
     header += f"Content-Length: {length}\r\n"
-    header += "Vary: Accept-Encoding\r\n"
     header += "Content-Type: html\r\n\r\n"
     return header
 

@@ -46,10 +46,8 @@ class ResponseBuilder:
 
 def closing_message():
     header = "HTTP/1.1 200 OK\r\n"
-    header += "Date: {get_time_now()}\r\n"
-    header += "Accept_Ranges: bytes\r\n"
+    header += f"Date: {get_time_now()}\r\n"
     header += "Content-Length: 0\r\n"
-    header += "Vary: Accept-Encoding\r\n"
     header += "Connection: close\r\n"
 
     return header
