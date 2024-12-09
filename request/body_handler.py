@@ -42,28 +42,30 @@ class MultipartChunk:
 
 
 class BodyHandler:
-    def __init__(self, request):
-        self.request = request
+    def __init__(self, header, body_content):
+        self.header = header
         self.bound_check = self.get_bound_check()
+        self.body_content = body_content
+        self.body = []
 
     def get_bound_check(self):
         try:
-            return self.request.header["content-type"].split("boundary=")[1]
+            return self.header["content-type"].split("boundary=")[1]
         except Exception:
             raise Error400Exception("Bad content-type")
 
     def get_body_content(self):
-        start_index = self.request.body.find(b"\r\n\r\n") + 4
-        end_index = self.request.body.find(f"\r\n{self.bound_check}--\r\n".encode())
+        start_index = self.body_content.find(b"\r\n\r\n") + 4
+        end_index = self.body_content.find(f"\r\n{self.bound_check}--\r\n".encode())
         if end_index == -1:
             raise Error400Exception("Wrong bound check")
-        return self.request.body[start_index:end_index]
+        return self.body_content[start_index:end_index]
 
     def parse(self):
         sep = b"\r\n\r\n"
         splits = [
             split.strip()
-            for split in self.request.body.split(self.bound_check.encode())
+            for split in self.body_content.split(self.bound_check.encode())
         ]
         for split in splits:
             if split == b"--" or split == b"--\r\n\r\n":
@@ -73,7 +75,7 @@ class BodyHandler:
             chunk.set_header(body_chunks[0])
             chunk.content = body_chunks[1]
             chunk.process()
-            self.request.body_chunks.append(chunk)
+            self.body.append(chunk)
 
 
 def get_disposition(disposition):
