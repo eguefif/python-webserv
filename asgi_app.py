@@ -50,10 +50,12 @@ async def app(scope, receive, send):
     assert scope["type"] == "http"
     print("Incoming: ", scope["path"])
 
+    task = None
     match scope["path"]:
         case "/":
             task = asyncio.create_task(handle_root(send))
         case "/image.jpg":
             task = asyncio.create_task(handle_image(send))
 
-    await task
+    if task:
+        await task

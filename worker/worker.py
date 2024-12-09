@@ -10,23 +10,25 @@ class Worker:
         self.reader = reader
         self.writer = writer
         self.current_state = "HEADER"
-        self.header_state = HeaderState(self.reader, self.writer)
-        self.asgi_state = AsgiState(reader, writer, app)
         self.peername = self.writer.get_extra_info("socket").getpeername()
+        self.header_state = HeaderState(self.reader, self.writer)
+        self.asgi_state = AsgiState(
+            reader, writer, app, self.peername, "127.0.0.1", 8888
+        )
 
     async def run(self):
         logging.info("New client: %s\n", self.peername)
-        request = Request()
+        header = {}
 
         while self.current_state != "ENDING":
-            logging.info("%s(%s):\n%s\n", self.peername, self.current_state, request)
+            logging.info("%s(%s):\n%s\n", self.peername, self.current_state, header)
             match self.current_state:
                 case "HEADER":
-                    request = await self.header_state.run(request)
+                    header = await self.header_state.run()
                     self.current_state = "ASGI"
                 case "ASGI":
                     print("ASGI")
-                    await self.asgi_state.run(request)
+                    await self.asgi_state.run(header)
                     self.current_state = "ENDING"
                 case _:
                     break

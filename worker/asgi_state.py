@@ -6,25 +6,35 @@ STATUS = {
 
 
 class AsgiState:
-    def __init__(self, reader, writer, app):
+    def __init__(self, reader, writer, app, peername, server_ip, port):
         self.writer = writer
         self.reader = reader
         self.app = app
+        self.host = peername[0]
+        self.port = peername[1]
+        self.server_ip = server_ip
+        self.port = port
 
-    async def run(self, request):
-        scope = self.create_scope(request)
+    async def run(self, header):
+        scope = self.create_scope(header)
         print("scope: ", scope)
         await self.app(scope, self.asgi_receive, self.asgi_send)
 
-    def create_scope(self, request):
+    def create_scope(self, header):
         scope = {}
         scope["type"] = "http"
         scope["asgi"] = {}
         scope["asgi"]["version"] = "2.0"
         scope["asgi"]["spec_version"] = "2.0"
-        scope["http_version"] = request.header["request-line"]["protocol"].split("/")[1]
-        scope["method"] = request.header["request-line"]["method"]
-        scope["path"] = request.header["request-line"]["path"]
+        scope["http_version"] = header["request-line"]["protocol"].split("/")[1]
+        scope["method"] = header["request-line"]["method"]
+        scope["path"] = header["request-line"]["path"]
+        scope["scheme"] = "http"
+        scope["query_string"] = header["request-line"]["query"]
+        scope["root_path"] = ""
+        scope["headers"] = header["headers"]
+        scope["host"] = [self.host, self.port]
+        scope["server"] = [self.server_ip, self.port]
 
         return scope
 
