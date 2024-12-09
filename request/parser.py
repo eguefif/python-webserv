@@ -21,9 +21,9 @@ def get_request_line(first_line):
         query = ""
 
     retval = {
-        "method": chunks[0].strip().lower(),
+        "method": chunks[0].strip(),
         "path": path,
         "query": query,
-        "protocol": chunks[2].strip().lower(),
+        "protocol": chunks[2].strip(),
     }
     return retval
