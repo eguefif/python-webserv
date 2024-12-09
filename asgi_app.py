@@ -11,7 +11,6 @@ async def handle_image(send):
             "status": 200,
             "headers": [
                 [b"content-type", b"image/png"],
-                [b"content-length", f"{len(image)}".encode()],
             ],
         }
     )
@@ -20,22 +19,24 @@ async def handle_image(send):
         {
             "type": "http.response.body",
             "body": image,
+            "more_body": False,
         }
     )
 
 
 async def handle_root(send):
+    with open("./html/index.html", "r") as f:
+        content = f.read()
     await send(
         {
             "type": "http.response.start",
             "status": 200,
             "headers": [
                 [b"content-type", b"text/html"],
+                [b"content-length", f"{len(content)}".encode()],
             ],
         }
     )
-    with open("./html/index.html", "r") as f:
-        content = f.read()
     await send(
         {
             "type": "http.response.body",

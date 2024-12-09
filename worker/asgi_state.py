@@ -1,8 +1,11 @@
 import datetime
+from response.chunked_response import send_chunked
 
 STATUS = {
     200: (b"200", b"ok"),
 }
+
+ENCODINGS = ["utf-8"]
 
 
 class AsgiState:
@@ -53,24 +56,34 @@ class AsgiState:
     def get_body_length(self):
         headers = self.request_header.get("headers", {})
         for entry in headers:
-            if entry[0] == "content-length":
+            if entry[0].lower() == "content-length":
                 return int(entry[1])
         return -1
 
     async def asgi_send(self, event):
         match event["type"]:
             case "http.response.start":
-                self.header = self.make_header(event)
+                self.asgi_header = event["headers"]
+                header = self.make_header(event)
+                self.writer.write(header)
+                await self.writer.drain()
             case "http.response.body":
-                self.body = event["body"]
-                await self.send_response()
+                await self.dispatch_response_builder(event)
 
-    async def send_response(self):
-        response = self.header
-        response += self.body
+    async def dispatch_response_builder(self, event):
+        body = event.get("body", b"")
+        more_body = event.get("more_body", False)
+        if self.is_content_length() or len(body) == 0:
+            self.writer.write(event.get("body", b""))
+            self.writer.drain()
+        else:
+            await send_chunked(self.writer, body, more_body)
 
-        self.writer.write(response)
-        await self.writer.drain()
+    def is_content_length(self):
+        for entry in self.asgi_header:
+            if entry[0].decode().lower() == "content-length":
+                return True
+        return False
 
     def make_header(self, send_header):
         code, message = STATUS[200]
@@ -79,14 +92,13 @@ class AsgiState:
         header += code + b" " + message + b"\r\n"
         header += f"Date: {get_time_now()}\r\n".encode()
         header += "Accept_Ranges: bytes\r\n".encode()
+        if not self.is_content_length():
+            header += b"Transfer-Encoding: chunked"
         for entry in send_header["headers"]:
             header += entry[0] + b": " + entry[1] + b"\r\n"
         header += b"}\r\n\r\n"
 
         return header
-
-    def make_body(self, send_body):
-        print("body")
 
 
 def get_time_now():
