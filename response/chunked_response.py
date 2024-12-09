@@ -1,6 +1,6 @@
 async def send_chunked(writer, body, more_body):
-    length = bytes(len(body))
-    writer.write(length)
+    length = f"{len(body)}".encode()
+    writer.write(length + b"\r\n")
     await writer.drain()
     writer.write(body)
     await writer.drain()

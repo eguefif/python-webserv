@@ -74,7 +74,7 @@ class AsgiState:
         body = event.get("body", b"")
         more_body = event.get("more_body", False)
         if self.is_content_length() or len(body) == 0:
-            self.writer.write(event.get("body", b""))
+            self.writer.write(body)
             self.writer.drain()
         else:
             await send_chunked(self.writer, body, more_body)
@@ -92,8 +92,9 @@ class AsgiState:
         header += code + b" " + message + b"\r\n"
         header += f"Date: {get_time_now()}\r\n".encode()
         header += "Accept_Ranges: bytes\r\n".encode()
+        header += "Server: asgi_webserver\r\n".encode()
         if not self.is_content_length():
-            header += b"Transfer-Encoding: chunked"
+            header += b"transfer-encoding: chunked\r\n"
         for entry in send_header["headers"]:
             header += entry[0] + b": " + entry[1] + b"\r\n"
         header += b"}\r\n\r\n"

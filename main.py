@@ -26,7 +26,7 @@ async def handle(reader, writer):
     worker = Worker(reader, writer, app)
     workers.append(worker)
     try:
-        await asyncio.wait_for(worker.run(), timeout=5)
+        await asyncio.wait_for(worker.run(), timeout=15)
     except asyncio.TimeoutError:
         logging.info("Connection timeout: %s - CLOSING", worker.peername)
     except Exception as e:

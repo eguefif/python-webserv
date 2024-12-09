@@ -10,7 +10,7 @@ async def handle_image(send):
             "type": "http.response.start",
             "status": 200,
             "headers": [
-                [b"content-type", b"image/png"],
+                [b"content-type", b"image/jpg"],
             ],
         }
     )
