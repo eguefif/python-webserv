@@ -25,18 +25,17 @@ async def handle_image(send):
 
 
 async def handle_root(send):
-    with open("./html/index.html", "r") as f:
-        content = f.read()
     await send(
         {
             "type": "http.response.start",
             "status": 200,
             "headers": [
                 [b"content-type", b"text/html"],
-                [b"content-length", f"{len(content)}".encode()],
             ],
         }
     )
+    with open("./html/index.html", "r") as f:
+        content = f.read()
     await send(
         {
             "type": "http.response.body",
@@ -45,10 +44,38 @@ async def handle_root(send):
     )
 
 
+async def handle_image_upload(receive, send, scope):
+    print("Receiving image")
+    more_body = True
+    body = b""
+
+    while more_body:
+        message = await receive()
+        body += message.get("body", b"")
+        more_body = message.get("more_body", False)
+
+    print(body)
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [
+                [b"content-type", b"text/plain"],
+            ],
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": b"File received",
+        }
+    )
+
+
 async def app(scope, receive, send):
-    print("test")
     assert scope["type"] == "http"
     print("Incoming: ", scope["path"])
+    print(scope)
 
     task = None
     match scope["path"]:
@@ -56,6 +83,8 @@ async def app(scope, receive, send):
             task = asyncio.create_task(handle_root(send))
         case "/image.jpg":
             task = asyncio.create_task(handle_image(send))
+        case "/upload.html":
+            task = asyncio.create_task(handle_image_upload(receive, send, scope))
 
     if task:
         await task

@@ -14,10 +14,12 @@ class AsgiState:
         self.port = peername[1]
         self.server_ip = server_ip
         self.port = port
+        self.request_header = {}
+        self.header = b""
 
     async def run(self, header):
+        self.request_header = header
         scope = self.create_scope(header)
-        print("scope: ", scope)
         await self.app(scope, self.asgi_receive, self.asgi_send)
 
     def create_scope(self, header):
@@ -38,8 +40,22 @@ class AsgiState:
 
         return scope
 
-    async def asgi_receive(self, event):
-        print("read event: ", event)
+    async def asgi_receive(self):
+        message = {}
+        body_length = self.get_body_length()
+        if body_length > 0:
+            body = await self.reader.read(int(body_length))
+            message["type"] = "http.request"
+            message["body"] = body
+            message["more_body"] = False
+            return message
+
+    def get_body_length(self):
+        headers = self.request_header.get("headers", {})
+        for entry in headers:
+            if entry[0] == "content-length":
+                return int(entry[1])
+        return -1
 
     async def asgi_send(self, event):
         match event["type"]:

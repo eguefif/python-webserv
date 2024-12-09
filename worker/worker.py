@@ -1,5 +1,4 @@
 import logging
-from request.request import Request
 from worker.header_state import HeaderState
 from worker.asgi_state import AsgiState
 from response import response_builder
