@@ -15,14 +15,14 @@ def get_app_from_argv():
     if len(sys.argv) == 0:
         print("Usage: python3 main.py module:function")
         return
-    mod, _, fct = sys.argv[1]
+    mod, _, fct = sys.argv[1].partition(":")
 
     module = importlib.import_module(mod)
     return getattr(module, fct)
 
 
 async def handle(reader, writer):
-    app = get_app_from_argv
+    app = get_app_from_argv()
     worker = Worker(reader, writer, app)
     workers.append(worker)
     try:

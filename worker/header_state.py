@@ -16,7 +16,7 @@ class HeaderState:
         while self.running:
             buffer += await self.reader.read(1)
             buffer = self.handle(buffer, request)
-        return BodyState(self.reader, self.writer)
+        return request
 
     def handle(self, buffer, request):
         if len(buffer) > 3 and buffer[-4:] == b"\r\n\r\n":

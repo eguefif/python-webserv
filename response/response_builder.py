@@ -11,8 +11,8 @@ routes = {
 
 
 class ResponseBuilder:
-    def __init__(self):
-        self.status = 200
+    def __init__(self, status=200):
+        self.status = status
 
     def make_response(self, request):
         response = b""

@@ -3,7 +3,7 @@ def parse_header(data):
     splits = header.strip().split("\r\n")
 
     header = {}
-    header["request"] = get_request_line(splits[0])
+    header["request-line"] = get_request_line(splits[0])
     for chunk in splits[1:]:
         parts = chunk.split(":")
         header[parts[0].strip().lower()] = parts[1].strip().lower()
