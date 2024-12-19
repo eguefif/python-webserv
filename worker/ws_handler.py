@@ -4,7 +4,7 @@ import base64
 
 ENCODINGS = ["utf-8"]
 
-WS_GUID = "258EAFA5-E914-47DA- 95CA-C5AB0DC85B11"
+WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
 class WsAppRunner:
@@ -26,29 +26,42 @@ class WsAppRunner:
         # await self.app(scope, self.asgi_receive, self.asgi_send)
         while True:
             message = await self.reader.read()
-            print(message)
+            # print(message)
             await asyncio.sleep(0)
 
     async def handle_handshake(self, header):
-        key = header["headers"]["sec-websocket-key"].strip()
+        key = self.get_key(header).strip()
         retval_key = self.get_sha1_b64_key(key)
+        print(retval_key)
         header = self.make_handshake_header(retval_key)
-        self.writer.send(header)
+        print(header)
+        self.writer.write(header)
         await self.writer.drain()
 
+    def get_key(self, header):
+        for entry in header["headers"]:
+            if entry[0] == "sec-websocket-key":
+                return entry[1]
+        return "error"
+
     def get_sha1_b64_key(self, key):
-        key = f"{key}{WS_GUID}"
+        print(key)
+        retval_key = f"{key}{WS_GUID}"
+        print(retval_key)
         hasher = hashlib.sha1()
-        hasher.update(key.encode())
+        hasher.update(retval_key.encode())
         hash = hasher.digest()
+        print(hash)
         return base64.b64encode(hash)
 
     def make_handshake_header(self, key):
         header = "HTTP/1.1 101 Switching Protocols\r\n"
         header += "Upgrade: websocket\r\n"
         header += "Connection: Upgrade\r\n"
-        header += f"Sec-Wesocket-Accept: {key}\r\n\r\n"
-        return header.encode()
+        header += "Host: 127.0.0.1:8888\r\n"
+        header += "Sec-WebSocket-Version: 13\r\n"
+        header += "Sec-WebSocket-Accept: "
+        return header.encode() + key + b"\r\n\r\n"
 
     def create_scope(self, header):
         scope = {}
