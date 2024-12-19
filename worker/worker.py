@@ -28,6 +28,7 @@ class Worker:
                     self.current_state = "ASGI"
                 case "ASGI":
                     if self.is_http(header):
+                        logging.info("Creating http runner")
                         app_runner = HttpAppRunner(
                             self.reader,
                             self.writer,
@@ -38,6 +39,7 @@ class Worker:
                         )
                         await app_runner.run(header)
                     else:
+                        logging.info("Creating ws runner")
                         app_runner = WsAppRunner(
                             self.reader,
                             self.writer,
@@ -51,7 +53,10 @@ class Worker:
                     break
 
     def is_http(self, header):
-        return "sec-websocket-key" in header["headers"].keys()
+        for entry in header["headers"]:
+            if entry[0] == "sec-websocket-key":
+                return False
+        return True
 
     async def teardown(self):
         logging.info("Closing connexion with %s", self.peername)
