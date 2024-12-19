@@ -7,7 +7,7 @@ def parse_header(data):
     header["headers"] = []
     for chunk in splits[1:]:
         parts = chunk.split(":")
-        header["headers"].append([parts[0].strip().lower(), parts[1].strip().lower()])
+        header["headers"].append([parts[0].strip().lower(), parts[1].strip()])
     return header
 
 

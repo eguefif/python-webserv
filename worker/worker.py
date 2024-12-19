@@ -48,6 +48,7 @@ class Worker:
                             self.host,
                             self.port,
                         )
+                        await app_runner.run(header)
                     self.current_state = "ENDING"
                 case _:
                     break
