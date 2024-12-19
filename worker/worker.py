@@ -1,6 +1,7 @@
 import logging
 from worker.header_state import HeaderState
-from worker.asgi_state import AsgiState
+from worker.http_handler import HttpAppRunner
+from worker.ws_handler import WsAppRunner
 from response import response_builder
 
 
@@ -11,9 +12,9 @@ class Worker:
         self.current_state = "HEADER"
         self.peername = self.writer.get_extra_info("socket").getpeername()
         self.header_state = HeaderState(self.reader, self.writer)
-        self.asgi_state = AsgiState(
-            reader, writer, app, self.peername, "127.0.0.1", 8888
-        )
+        self.app = app
+        self.host = "127.0.0.1"
+        self.port = 8888
 
     async def run(self):
         logging.info("New client: %s\n", self.peername)
@@ -26,11 +27,31 @@ class Worker:
                     header = await self.header_state.run()
                     self.current_state = "ASGI"
                 case "ASGI":
-                    print("ASGI")
-                    await self.asgi_state.run(header)
+                    if self.is_http(header):
+                        app_runner = HttpAppRunner(
+                            self.reader,
+                            self.writer,
+                            self.app,
+                            self.peername,
+                            self.host,
+                            self.port,
+                        )
+                        await app_runner.run(header)
+                    else:
+                        app_runner = WsAppRunner(
+                            self.reader,
+                            self.writer,
+                            self.app,
+                            self.peername,
+                            self.host,
+                            self.port,
+                        )
                     self.current_state = "ENDING"
                 case _:
                     break
+
+    def is_http(self, header):
+        return "sec-websocket-key" in header["headers"].keys()
 
     async def teardown(self):
         logging.info("Closing connexion with %s", self.peername)

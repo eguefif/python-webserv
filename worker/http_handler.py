@@ -8,7 +8,7 @@ STATUS = {
 ENCODINGS = ["utf-8"]
 
 
-class AsgiState:
+class HttpAppRunner:
     def __init__(self, reader, writer, app, peername, server_ip, port):
         self.writer = writer
         self.reader = reader
