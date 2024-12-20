@@ -18,15 +18,19 @@ class WsAppRunner:
         self.port = port
         self.request_header = {}
         self.header = b""
+        self.ws_state = "INIT"
 
     async def run(self, header):
         self.request_header = header
-        await self.handle_handshake(header)
         scope = self.create_scope(header)
-        await self.app(scope, self.asgi_receive, self.asgi_send)
+        self.app_task = asyncio.create_task(
+            self.app(scope, self.asgi_receive, self.asgi_send)
+        )
+        while self.ws_state != "CLOSED":
+            await asyncio.sleep(0)
 
-    async def handle_handshake(self, header):
-        key = self.get_key(header).strip()
+    async def handle_handshake(self):
+        key = self.get_key().strip()
         retval_key = self.get_sha1_b64_key(key)
         print(retval_key)
         header = self.make_handshake_header(retval_key)
@@ -34,8 +38,8 @@ class WsAppRunner:
         self.writer.write(header)
         await self.writer.drain()
 
-    def get_key(self, header):
-        for entry in header["headers"]:
+    def get_key(self):
+        for entry in self.request_header["headers"]:
             if entry[0] == "sec-websocket-key":
                 return entry[1]
         return "error"
@@ -75,6 +79,19 @@ class WsAppRunner:
         return scope
 
     async def asgi_receive(self):
-        return {"type": "hello"}
+        print("App is receiving")
+        if self.ws_state == "INIT":
+            self.ws_state = "HANDSHAKING"
+            return {"type": "websocket.connect"}
+        elif self.ws_state == "CLOSED":
+            return {"type": "websocket.disconnect"}
+        elif self.ws_state == "RUNNING":
+            print("reading from socket")
 
-    async def asgi_send(self): ...
+    async def asgi_send(self, message):
+        print("App is sending: ", message)
+        if self.ws_state == "HANDSHAKING" and message["type"] == "websocket.accept":
+            self.ws_state = "RUNNING"
+            await self.handle_handshake()
+        if self.ws_state == "RUNNING" and message["type"] == "websocket.send":
+            print(message)
