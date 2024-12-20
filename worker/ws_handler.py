@@ -65,12 +65,15 @@ class WsAppRunner:
 
     def create_scope(self, header):
         scope = {}
-        scope["type"] = "ws"
+        scope["type"] = "websocket"
+        scope["scheme"] = "ws"
+        scope["path"] = header["request-line"]["path"]
+        scope["raw_path"] = None
         scope["asgi"] = {}
         scope["asgi"]["version"] = "2.0"
         scope["asgi"]["spec_version"] = "2.0"
         scope["headers"] = header["headers"]
-        scope["host"] = [self.host, self.port]
+        scope["client"] = [self.host, self.port]
         scope["server"] = [self.server_ip, self.port]
 
         return scope
