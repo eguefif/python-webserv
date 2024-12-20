@@ -1,4 +1,5 @@
 # Project ignore
+chat.db
 uploaded_files/
 .DS_Store
 lightweight.png

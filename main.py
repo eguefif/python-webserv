@@ -1,3 +1,5 @@
+from app import lifespan
+from worker.lifespan_handler import LifeSpanHandler
 import importlib
 import sys
 import signal
@@ -68,6 +70,10 @@ async def main():
     addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
     print(f"Serving on #{addrs}")
 
+    print("Starting app")
+    app = get_app_from_argv()
+    lifespan_handler = LifeSpanHandler(app)
+    asyncio.create_task(lifespan_handler.run())
     async with server:
         await server.serve_forever()
 
