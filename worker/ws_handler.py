@@ -22,12 +22,8 @@ class WsAppRunner:
     async def run(self, header):
         self.request_header = header
         await self.handle_handshake(header)
-        # scope = self.create_scope(header)
-        # await self.app(scope, self.asgi_receive, self.asgi_send)
-        while True:
-            message = await self.reader.read()
-            # print(message)
-            await asyncio.sleep(0)
+        scope = self.create_scope(header)
+        await self.app(scope, self.asgi_receive, self.asgi_send)
 
     async def handle_handshake(self, header):
         key = self.get_key(header).strip()
@@ -65,19 +61,20 @@ class WsAppRunner:
 
     def create_scope(self, header):
         scope = {}
+        scope["asgi"] = {}
+        scope["asgi"]["version"] = "2.0"
+        scope["asgi"]["spec_version"] = "2.0"
         scope["type"] = "websocket"
         scope["scheme"] = "ws"
         scope["path"] = header["request-line"]["path"]
         scope["raw_path"] = None
-        scope["asgi"] = {}
-        scope["asgi"]["version"] = "2.0"
-        scope["asgi"]["spec_version"] = "2.0"
         scope["headers"] = header["headers"]
         scope["client"] = [self.host, self.port]
         scope["server"] = [self.server_ip, self.port]
 
         return scope
 
-    async def asgi_receive(self): ...
+    async def asgi_receive(self):
+        return {"type": "hello"}
 
     async def asgi_send(self): ...
