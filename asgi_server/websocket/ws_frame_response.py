@@ -1,8 +1,8 @@
 def ws_frame_response_builder(message):
-    if message["bytes"] is not None:
+    if "bytes" in message.keys():
         return build_response(message["bytes"], text=False)
     else:
-        return build_response(message["bytes"])
+        return build_response(message["text"])
 
 
 def build_response(message, text=True):
