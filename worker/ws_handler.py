@@ -2,6 +2,8 @@ import asyncio
 import hashlib
 import base64
 
+from parser.frame_parser import FrameParser
+
 ENCODINGS = ["utf-8"]
 
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -19,6 +21,7 @@ class WsAppRunner:
         self.request_header = {}
         self.header = b""
         self.ws_state = "INIT"
+        self.ws_messages = []
 
     async def run(self, header):
         self.request_header = header
@@ -26,6 +29,7 @@ class WsAppRunner:
         self.app_task = asyncio.create_task(
             self.app(scope, self.asgi_receive, self.asgi_send)
         )
+        self.reading_task = asyncio.create_task(self.read_socket())
         while self.ws_state != "CLOSED":
             await asyncio.sleep(0)
 
@@ -85,8 +89,23 @@ class WsAppRunner:
             return {"type": "websocket.connect"}
         elif self.ws_state == "CLOSED":
             return {"type": "websocket.disconnect"}
+            # TODO: implements proper websocket closing mechanism
         elif self.ws_state == "RUNNING":
-            print("reading from socket")
+            while len(self.ws_messages) == 0:
+                await asyncio.sleep(0)
+            retval = {"type": "websocket.receive"}
+            message = self.pop_next_message()
+            if message["type"] == "bytes":
+                retval["bytes"] = message["content"]
+            else:
+                retval["text"] = message["content"]
+            return retval
+
+    def pop_next_message(self):
+        message = self.ws_messages[0]
+        for i in range(0, len(self.ws_messages) - 1):
+            self.ws_messages[i] = self.ws_messages[i + 1]
+        return message
 
     async def asgi_send(self, message):
         print("App is sending: ", message)
@@ -95,3 +114,13 @@ class WsAppRunner:
             await self.handle_handshake()
         if self.ws_state == "RUNNING" and message["type"] == "websocket.send":
             print(message)
+            # TODO: send message to socket
+
+    async def read_socket(self):
+        frame_parser = FrameParser()
+        while self.ws_state != "CLOSED":
+            byte = self.reader.read(1)
+            frame_parser.parse(byte)
+            if frame_parser.is_frame_complete:
+                message = frame_parser.get_message()
+                self.ws_messages.append(message)
