@@ -1,4 +1,4 @@
-from parser import http_header_parser
+from http import http_header_parser
 
 
 class HeaderState:

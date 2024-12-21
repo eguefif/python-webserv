@@ -1,8 +1,8 @@
 import logging
 from worker.header_state import HeaderState
-from worker.http_handler import HttpAppRunner
-from worker.ws_handler import WsAppRunner
-from response import response_builder
+from http.http_handler import HttpAppRunner
+from websocket.ws_handler import WsAppRunner
+from http.response import response_builder
 
 
 class Worker:
