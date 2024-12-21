@@ -3,6 +3,7 @@ import hashlib
 import base64
 
 from parser.frame_parser import FrameParser
+from response.ws_frame_response import ws_frame_response_builder
 
 ENCODINGS = ["utf-8"]
 
@@ -107,8 +108,9 @@ class WsAppRunner:
             self.ws_state = "RUNNING"
             await self.handle_handshake()
         if self.ws_state == "RUNNING" and message["type"] == "websocket.send":
-            print(message)
-            # TODO: send message to socket
+            response = ws_frame_response_builder(message)
+            self.writer.write(response)
+            await self.writer.drain()
 
     async def read_socket(self):
         frame_parser = FrameParser()

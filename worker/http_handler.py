@@ -75,7 +75,7 @@ class HttpAppRunner:
         more_body = event.get("more_body", False)
         if self.is_content_length() or len(body) == 0:
             self.writer.write(body)
-            self.writer.drain()
+            await self.writer.drain()
         else:
             await send_chunked(self.writer, body, more_body)
 

@@ -1,4 +1,4 @@
-from request import parser
+from parser import http_header_parser
 
 
 class HeaderState:
@@ -16,7 +16,7 @@ class HeaderState:
 
     def handle(self, buffer):
         if len(buffer) > 3 and buffer[-4:] == b"\r\n\r\n":
-            self.header = parser.parse_header(buffer)
+            self.header = http_header_parser.parse_header(buffer)
             self.running = False
         else:
             return buffer
