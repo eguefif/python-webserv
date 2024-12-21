@@ -36,9 +36,7 @@ class WsAppRunner:
     async def handle_handshake(self):
         key = self.get_key().strip()
         retval_key = self.get_sha1_b64_key(key)
-        print(retval_key)
         header = self.make_handshake_header(retval_key)
-        print(header)
         self.writer.write(header)
         await self.writer.drain()
 
@@ -49,13 +47,10 @@ class WsAppRunner:
         return "error"
 
     def get_sha1_b64_key(self, key):
-        print(key)
         retval_key = f"{key}{WS_GUID}"
-        print(retval_key)
         hasher = hashlib.sha1()
         hasher.update(retval_key.encode())
         hash = hasher.digest()
-        print(hash)
         return base64.b64encode(hash)
 
     def make_handshake_header(self, key):
@@ -83,7 +78,6 @@ class WsAppRunner:
         return scope
 
     async def asgi_receive(self):
-        print("App is receiving")
         if self.ws_state == "INIT":
             self.ws_state = "HANDSHAKING"
             return {"type": "websocket.connect"}
@@ -105,10 +99,10 @@ class WsAppRunner:
         message = self.ws_messages[0]
         for i in range(0, len(self.ws_messages) - 1):
             self.ws_messages[i] = self.ws_messages[i + 1]
+        self.ws_messages.pop()
         return message
 
     async def asgi_send(self, message):
-        print("App is sending: ", message)
         if self.ws_state == "HANDSHAKING" and message["type"] == "websocket.accept":
             self.ws_state = "RUNNING"
             await self.handle_handshake()
@@ -119,8 +113,9 @@ class WsAppRunner:
     async def read_socket(self):
         frame_parser = FrameParser()
         while self.ws_state != "CLOSED":
-            byte = self.reader.read(1)
+            byte = await self.reader.read(1)
             frame_parser.parse(byte)
             if frame_parser.is_frame_complete:
                 message = frame_parser.get_message()
                 self.ws_messages.append(message)
+                frame_parser.reset()
